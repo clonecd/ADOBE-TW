@@ -3,90 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PSAI 繁體安全查詢框架</title>
+    <title>PSAI 驗證碼安全框架</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background: #0c0c0e; color: #f4f4f5; }
-        .glass-container { background: rgba(24, 24, 27, 0.8); backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.08); }
-        .code-text { letter-spacing: -0.05em; text-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
-        .status-dot { width: 6px; height: 6px; border-radius: 50%; }
+        body { background: #09090b; color: #fafafa; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; }
+        .glass { background: rgba(24, 24, 27, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .code-display { font-variant-numeric: tabular-nums; letter-spacing: 0.1em; }
         @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .loading { animation: pulse-soft 1.5s infinite; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-6 select-none">
+<body class="min-h-screen flex flex-col items-center justify-center p-6">
 
-    <div class="fixed top-0 left-0 w-full h-full -z-10">
-        <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-600/10 rounded-full blur-[100px]"></div>
-        <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-600/10 rounded-full blur-[100px]"></div>
+    <div class="fixed top-0 left-0 w-full h-full -z-10 overflow-hidden">
+        <div class="absolute top-[-10%] right-[-10%] w-96 h-96 bg-blue-600/10 rounded-full blur-[100px]"></div>
+        <div class="absolute bottom-[-10%] left-[-10%] w-96 h-96 bg-red-600/5 rounded-full blur-[100px]"></div>
     </div>
 
-    <div class="w-full max-w-md glass-container rounded-[2.5rem] p-10 shadow-2xl">
-        
+    <div class="w-full max-w-md glass rounded-[2.5rem] p-10 shadow-2xl">
         <header class="text-center mb-10">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 mb-6">
-                <span class="status-dot bg-blue-500 animate-pulse"></span>
-                <span class="text-[10px] font-black text-blue-400 uppercase tracking-widest">Proxy Tunnel Active</span>
+            <div class="inline-block px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 mb-4">
+                <span class="text-[10px] font-bold text-blue-400 tracking-widest uppercase italic">Secure Tunnel Connected</span>
             </div>
-            <h1 class="text-4xl font-black tracking-tighter text-white">PSAI FRAME</h1>
-            <p class="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.4em] mt-2 ml-1">驗證碼安全通訊框架</p>
+            <h1 class="text-3xl font-black tracking-tighter mb-1">PSAI LIVE</h1>
+            <p class="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.3em] ml-1">繁體安全通訊框架</p>
         </header>
 
         <div class="space-y-6">
             <div class="space-y-2">
-                <label class="text-[10px] font-bold text-zinc-500 ml-1 tracking-widest uppercase">Target Account</label>
-                <input type="email" id="email" value="748kvi41b@psai.xin" 
-                    class="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl px-6 py-5 outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 transition-all text-lg font-bold text-white placeholder:text-zinc-700">
+                <label class="text-[10px] font-bold text-zinc-500 ml-1 uppercase tracking-widest">目標郵箱帳號</label>
+                <div class="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl px-6 py-4 text-zinc-300 font-mono text-sm">
+                    748kvi41b@psai.xin
+                </div>
             </div>
 
             <button onclick="fetchCode()" id="queryBtn"
-                class="w-full bg-white hover:bg-zinc-200 text-black font-black py-5 rounded-2xl transition-all active:scale-[0.97] shadow-xl shadow-white/5 flex justify-center items-center gap-3">
-                <span id="btnText">立即獲取驗證碼</span>
+                class="w-full bg-white hover:bg-zinc-200 text-black font-black py-4 rounded-2xl transition-all active:scale-[0.98] shadow-lg flex justify-center items-center gap-2">
+                <span id="btnText">獲取最新驗證碼</span>
             </button>
         </div>
 
-        <div id="result" class="mt-12 pt-8 border-t border-zinc-800/50 hidden text-center">
-            <span class="text-[10px] font-black text-zinc-600 tracking-[0.3em] uppercase">Latest Verification Code</span>
-            <div id="code-box" class="text-6xl font-black text-white mt-4 code-text italic">------</div>
-            <div id="status-msg" class="mt-6 text-[10px] font-bold text-zinc-500 flex items-center justify-center gap-2">
-                <span class="opacity-50">SYSTEM IDLE</span>
-            </div>
+        <div id="resultArea" class="mt-12 pt-8 border-t border-zinc-800/50 hidden text-center">
+            <span class="text-[10px] font-black text-zinc-600 tracking-[0.3em] uppercase">Current Verification Code</span>
+            <div id="codeBox" class="text-6xl font-black text-white mt-4 code-display italic">------</div>
+            <div id="statusMsg" class="mt-6 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">系統就緒</div>
         </div>
-
-        <p class="text-center text-[9px] text-zinc-700 mt-12 font-bold tracking-[0.2em] uppercase">
-            Encrypted Gateway via Google Script
-        </p>
     </div>
 
+    <footer class="mt-10 text-center">
+        <p class="text-[9px] text-zinc-600 font-bold tracking-widest uppercase italic">
+            Proxy via Google Apps Script Gateway
+        </p>
+    </footer>
+
     <script>
-        // 你的專屬 Google Apps Script 網址
-        const PROXY_GATEWAY = 'https://script.google.com/macros/s/AKfycbyRbiVR0b0h328JkllhPCeWFZLlTj3WJTxl-QAut6VH9hzITIOUvHmIg5aKQvRNqqTBVQ/exec';
+        // 這是你剛剛建立的 Google Script 轉發網址
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyRbiVR0b0h328JkllhPCeWFZLlTj3WJTxl-QAut6VH9hzITIOUvHmIg5aKQvRNqqTBVQ/exec';
+        const TARGET_EMAIL = '748kvi41b@psai.xin';
 
         async function fetchCode() {
-            const email = document.getElementById('email').value.trim();
             const btn = document.getElementById('queryBtn');
             const btnText = document.getElementById('btnText');
-            const resultArea = document.getElementById('result');
-            const codeBox = document.getElementById('code-box');
-            const statusMsg = document.getElementById('status-msg');
+            const resultArea = document.getElementById('resultArea');
+            const codeBox = document.getElementById('codeBox');
+            const statusMsg = document.getElementById('statusMsg');
 
-            if (!email) return;
-
-            // 進入鎖定讀取狀態
+            // 進入讀取狀態
             btn.disabled = true;
-            btnText.innerText = '正在建立安全連線...';
+            btnText.innerText = '正在通訊...';
             resultArea.classList.remove('hidden');
             codeBox.innerText = "QUERY";
             codeBox.classList.add('loading', 'text-zinc-700');
-            statusMsg.innerHTML = '<span class="status-dot bg-yellow-500 animate-ping"></span> <span class="ml-1">正在穿透 HTTPS 限制...</span>';
+            statusMsg.innerText = "正在穿透 HTTPS 限制並讀取資料";
 
             try {
-                // 透過你的 Google Script 發送請求
-                const response = await fetch(`${PROXY_GATEWAY}?email=${encodeURIComponent(email)}`);
+                // 透過 Google Script 發送請求
+                const response = await fetch(`${SCRIPT_URL}?email=${encodeURIComponent(TARGET_EMAIL)}`);
                 const text = await response.text();
 
-                // 抓取內容中的 6 位數字
+                // 使用正則表達式提取 6 位連續數字
                 const match = text.match(/\d{6}/);
 
                 setTimeout(() => {
@@ -94,20 +89,22 @@
                         codeBox.innerText = match[0];
                         codeBox.classList.remove('loading', 'text-zinc-700');
                         codeBox.classList.add('text-white');
-                        statusMsg.innerHTML = '<span class="status-dot bg-green-500"></span> <span class="ml-1 text-green-500/80">連線成功 | ' + new Date().toLocaleTimeString() + '</span>';
+                        statusMsg.innerText = "查詢成功 | " + new Date().toLocaleTimeString();
+                        statusMsg.classList.add('text-blue-500');
                     } else {
                         codeBox.innerText = "EMPTY";
-                        statusMsg.innerHTML = '<span class="status-dot bg-zinc-500"></span> <span class="ml-1 uppercase text-zinc-400 font-black">查無驗證碼資料</span>';
+                        statusMsg.innerText = "查無驗證碼，請確認 Adobe 是否已發送";
                     }
                 }, 800);
 
             } catch (err) {
                 console.error(err);
                 codeBox.innerText = "ERROR";
-                statusMsg.innerHTML = '<span class="status-dot bg-red-500"></span> <span class="ml-1 text-red-500/80">代理連線超時</span>';
+                statusMsg.innerText = "Google Proxy 連線失敗，請檢查 Script 權限";
+                statusMsg.classList.add('text-red-500');
             } finally {
                 btn.disabled = false;
-                btnText.innerText = '立即獲取驗證碼';
+                btnText.innerText = '獲取最新驗證碼';
                 codeBox.classList.remove('loading');
             }
         }
