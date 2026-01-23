@@ -3,48 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adobe 帳號驗證碼查詢</title>
+    <title>Adobe 驗證碼快速查詢</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #f3f4f6; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; }
-        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
-        .code-font { font-family: 'Courier New', Courier, monospace; }
-        @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .loading { animation: pulse-soft 1.5s infinite; }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .loading-dots:after { content: ' .'; animation: dots 1.5s steps(5, end) infinite; }
+        @keyframes dots { 0%, 20% { content: ' .'; } 40% { content: ' ..'; } 60% { content: ' ...'; } 80%, 100% { content: ''; } }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
 
-    <div class="w-full max-w-md glass-card rounded-3xl shadow-xl p-8 border border-gray-100">
-        
+    <div class="w-full max-w-md glass rounded-[2.5rem] shadow-2xl p-8 border border-white">
         <div class="text-center mb-8">
-            <div class="w-16 h-16 bg-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-red-200">
-                <span class="text-white text-3xl font-bold">A</span>
+            <div class="w-16 h-16 bg-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <svg class="w-10 h-10 text-white" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M13.98 21.806h6.296L13.98 4.412zM10.201 21.806H3.72l6.481-17.394zM12.001 8.718l3.926 10.45H8.075z"/>
+                </svg>
             </div>
-            <h1 class="text-2xl font-bold text-gray-800 tracking-tight">Adobe 驗證碼查詢</h1>
-            <p class="text-gray-500 mt-2 text-sm">快速查詢您的郵箱驗證碼</p>
+            <h1 class="text-2xl font-black text-gray-800 tracking-tight">Adobe 帳號查詢</h1>
+            <p class="text-gray-400 mt-1 text-sm font-medium">快速獲取您的郵箱驗證碼</p>
         </div>
 
-        <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6 rounded-r-lg">
-            <p class="text-xs text-red-700 leading-relaxed">
-                <strong>重要提醒：</strong><br>
-                驗證碼輸入錯誤禁止重複輸入！請點擊下方按鈕獲取最新驗證碼。
+        <div class="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6 rounded-r-xl">
+            <p class="text-xs text-amber-700 leading-relaxed font-bold">
+                ⚠ 驗證碼輸入錯誤禁止重複輸入！<br>請點擊下方按鈕獲取最新驗證碼。
             </p>
         </div>
 
         <div class="space-y-4">
-            <div>
-                <label class="block text-xs font-semibold text-gray-400 mb-1 ml-1 uppercase">電子郵件帳號</label>
+            <div class="relative">
                 <input type="email" id="email" 
+                    value="748kvi41b@psai.xin"
                     placeholder="請輸入您的郵箱帳號" 
-                    class="w-full px-4 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all text-lg font-medium">
+                    class="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:border-blue-500 outline-none transition-all text-lg font-semibold text-gray-700 placeholder:text-gray-300">
             </div>
 
-            <button onclick="doQuery()" id="queryBtn"
-                class="w-full bg-gray-900 hover:bg-black text-white font-bold py-4 rounded-2xl shadow-lg transition-all active:scale-95 flex justify-center items-center">
-                <span>立即查詢驗證碼</span>
+            <button onclick="startQuery()" id="btn"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl shadow-blue-200 shadow-lg transition-all active:scale-95 text-lg">
+                立即查詢
             </button>
         </div>
 
-        <div id="result-box" class="hidden mt-10 pt-8 border-t border-dashed border-gray-200 text-center">
-            <h2 class="text-xs font-bold text-gray-400 tracking-widest uppercase mb-4">最新收到的驗證碼</h2>
+        <div id="result-area" class="hidden mt-10 pt-8 border-t border-gray-100 text-center">
+            <p class="text-[10px] font-bold text-gray-300 uppercase tracking-[0.2em] mb-2">Latest Verification Code</p>
+            <div id="code-out" class="text-5xl font-mono font-black text-blue-600 tracking-widest">
+                ------
+            </div>
+            <div id="status" class="mt-4 text-xs font-bold text-gray-400">準備就緒</div>
+        </div>
+
+        <p class="text-center text-[10px] text-gray-300 mt-10 font-bold tracking-widest">
+            © 2026 PSAI LIVE · 繁體精簡版
+        </p>
+    </div>
+
+    <script>
+        async function startQuery() {
+            const email = document.getElementById('email').value.trim();
+            const btn = document.getElementById('btn');
+            const resultArea = document.getElementById('result-area');
+            const codeOut = document.getElementById('code-out');
+            const status = document.getElementById('status');
+
+            if (!email) return alert('請輸入郵箱');
+
+            // 1. 初始化狀態
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-dots">查詢中</span>';
+            resultArea.classList.remove('hidden');
+            codeOut.innerText = "------";
+            codeOut.classList.add('text-gray-200');
+            status.innerText = "正在透過代理請求資料...";
+
+            // 2. 代理與 API 設定
+            // 使用 Google Gadgets Proxy 繞過 HTTPS/CORS 限制
+            const targetUrl = `http://live.psai.xin/proxy.php?email=${encodeURIComponent(email)}`;
+            const proxyUrl = `https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=none&url=${encodeURIComponent(targetUrl)}`;
+
+            try {
+                const res = await fetch(proxyUrl);
+                const html = await res.text();
+
+                // 3. 處理結果
+                // 這裡假設 API 直接回傳 6 位數字字串
+                // 如果回傳包含 HTML，我們用正則表達式抓取數字
+                const match = html.match(/\d{6}/);
+                
+                if (match) {
+                    codeOut.innerText = match[0];
+                    codeOut.classList.remove('text-gray-200');
+                    codeOut.classList.add('text-blue-600');
+                    status.innerText = "查詢成功";
+                } else {
+                    codeOut.innerText = "NONE";
+                    status.innerText = "目前暫無驗證碼，請稍後再試";
+                }
+            } catch (err) {
+                console.error(err);
+                codeOut.innerText = "FAIL";
+                status.innerText = "網路錯誤或代理服務暫時不可用";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "立即查詢";
+            }
+        }
+    </script>
+</body>
+</html>
