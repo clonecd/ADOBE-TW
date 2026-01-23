@@ -3,108 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adobe 驗證碼查詢</title>
+    <title>PSAI Live | 驗證碼查詢框架</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        body { background: #f9fafb; font-family: -apple-system, "Microsoft JhengHei", sans-serif; }
-        .card { background: white; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .btn-primary { background: #0066ff; transition: all 0.2s; }
-        .btn-primary:hover { background: #0052cc; transform: translateY(-1px); }
-        .btn-primary:active { transform: translateY(0); }
-        .loading { animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        body { font-family: 'Inter', "Microsoft JhengHei", sans-serif; background: #000; color: white; overflow: hidden; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .gradient-text { background: linear-gradient(135deg, #fff 0%, #888 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .glow-btn { transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.2); }
+        .glow-btn:hover { background: white; color: black; box-shadow: 0 0 20px rgba(255,255,255,0.4); }
+        #code-display { letter-spacing: 0.15em; text-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="h-screen flex items-center justify-center">
 
-    <div class="card w-full max-w-md p-8">
-        <div class="text-center mb-8">
-            <div class="w-16 h-16 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 24 24"><path d="M13.98 21.806h6.296L13.98 4.412zM10.201 21.806H3.72l6.481-17.394zM12.001 8.718l3.926 10.45H8.075z"/></svg>
+    <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-900/20 rounded-full blur-[120px]"></div>
+    <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-red-900/10 rounded-full blur-[120px]"></div>
+
+    <main class="relative z-10 w-full max-w-lg px-6">
+        <div class="glass rounded-[3rem] p-10 shadow-2xl">
+            
+            <header class="text-center mb-10">
+                <div class="inline-block px-4 py-1 rounded-full bg-white/10 text-[10px] font-bold tracking-[0.2em] mb-4 text-blue-400">SYSTEM ONLINE</div>
+                <h1 class="text-4xl font-black gradient-text tracking-tighter mb-2">PSAI LIVE</h1>
+                <p class="text-gray-500 text-sm">Adobe 驗證碼安全查詢框架</p>
+            </header>
+
+            <div class="space-y-6">
+                <div class="relative group">
+                    <label class="absolute -top-2.5 left-5 px-2 bg-black/50 text-[10px] text-gray-400 font-bold tracking-widest">EMAIL ACCOUNT</label>
+                    <input type="email" id="email" value="748kvi41b@psai.xin" 
+                        class="w-full bg-transparent border-2 border-white/10 rounded-2xl px-6 py-5 outline-none focus:border-white transition-all text-lg font-medium">
+                </div>
+
+                <button onclick="fetchAPI()" id="mainBtn"
+                    class="glow-btn w-full py-5 rounded-2xl font-bold text-lg flex justify-center items-center gap-3">
+                    <span id="btnText">立即執行查詢</span>
+                </button>
             </div>
-            <h1 class="text-2xl font-bold text-gray-800">Adobe 帳號查詢</h1>
-            <p class="text-gray-400 text-sm mt-1 font-medium">專屬繁體精簡查詢界面</p>
+
+            <section id="resultFrame" class="mt-12 pt-8 border-t border-white/5 text-center opacity-0 transition-opacity duration-500">
+                <h2 class="text-[10px] font-black text-gray-500 tracking-[0.3em] uppercase mb-6">Security Code</h2>
+                <div id="code-display" class="text-6xl font-black text-blue-500 italic">------</div>
+                <div id="status-text" class="mt-6 text-[10px] text-gray-600 font-bold uppercase tracking-widest">Waiting for request...</div>
+            </section>
+
         </div>
 
-        <div class="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-6">
-            <p class="text-xs text-amber-700 leading-relaxed font-bold">
-                ⚠️ 注意：驗證碼錯誤後請勿重試！請點擊下方按鈕重新獲取。
+        <footer class="mt-10 text-center">
+            <p class="text-[10px] text-gray-600 font-medium tracking-widest uppercase">
+                &copy; 2026 PSAI Project &bull; 繁體介面框架取代版
             </p>
         </div>
-
-        <div class="space-y-4">
-            <div>
-                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Email Account</label>
-                <input type="email" id="emailInput" 
-                    value="748kvi41b@psai.xin" 
-                    class="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-gray-700 transition-all">
-            </div>
-
-            <button onclick="fetchCode()" id="queryBtn" class="btn-primary w-full text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-100 flex items-center justify-center gap-2">
-                <span id="btnText">立即查詢驗證碼</span>
-            </button>
-        </div>
-
-        <div id="resultBox" class="hidden mt-10 pt-8 border-t border-gray-50 text-center animate-fade-in">
-            <span class="text-[10px] font-bold text-gray-300 tracking-[0.3em] uppercase">Current Verification Code</span>
-            <div id="codeOutput" class="text-5xl font-mono font-black text-blue-600 mt-4 tracking-tighter">------</div>
-            <p id="statusMsg" class="text-[10px] text-gray-400 mt-4 font-bold uppercase"></p>
-        </div>
-
-        <div class="mt-12 text-center border-t pt-6 border-gray-50">
-            <p class="text-[9px] text-gray-300 font-bold tracking-widest uppercase italic">Target: live.psai.xin</p>
-        </div>
-    </div>
+    </main>
 
     <script>
-        async function fetchCode() {
-            const email = document.getElementById('emailInput').value.trim();
-            const btn = document.getElementById('queryBtn');
+        async function fetchAPI() {
+            const email = document.getElementById('email').value.trim();
+            const btn = document.getElementById('mainBtn');
             const btnText = document.getElementById('btnText');
-            const resultBox = document.getElementById('resultBox');
-            const codeOutput = document.getElementById('codeOutput');
-            const statusMsg = document.getElementById('statusMsg');
+            const resultFrame = document.getElementById('resultFrame');
+            const codeDisplay = document.getElementById('code-display');
+            const statusText = document.getElementById('status-text');
 
-            if (!email) return alert('請輸入帳號');
+            if (!email) return;
 
-            // 1. UI 讀取狀態
+            // 進入加載狀態
             btn.disabled = true;
-            btnText.innerText = '查詢中...';
-            resultBox.classList.remove('hidden');
-            codeOutput.innerText = "......";
-            codeOutput.classList.add('loading');
-            statusMsg.innerText = "正在透過加密代理獲取資料";
+            btnText.innerText = '正在處理中...';
+            resultFrame.style.opacity = '1';
+            codeDisplay.innerText = "LOADING";
+            codeDisplay.classList.add('animate-pulse');
+            statusText.innerText = "正在連線至 live.psai.xin 伺服器";
 
-            // 2. 跨域代理設定 (解決 HTTPS 請求 HTTP 的問題)
-            const targetUrl = `http://live.psai.xin/proxy.php?email=${encodeURIComponent(email)}`;
-            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+            // 使用代理繞過 HTTPS 限制
+            const target = `http://live.psai.xin/proxy.php?email=${encodeURIComponent(email)}`;
+            const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(target)}`;
 
             try {
-                const response = await fetch(proxyUrl);
+                const response = await fetch(proxy);
                 const data = await response.json();
-                
-                // 3. 解析回傳內容 (Allorigins 會把 HTML 放在 .contents 中)
                 const content = data.contents;
-                
-                // 使用正則抓取 6 位數字
-                const match = content.match(/\d{6}/);
-                
-                if (match) {
-                    codeOutput.innerText = match[0];
-                    statusMsg.innerText = "查詢成功";
-                    statusMsg.classList.add('text-green-500');
-                } else {
-                    codeOutput.innerText = "NONE";
-                    statusMsg.innerText = "目前收件匣無驗證碼";
-                }
-            } catch (error) {
-                console.error('Fetch error:', error);
-                codeOutput.innerText = "FAIL";
-                statusMsg.innerText = "代理服務連線失敗";
+
+                // 提取 6 位數字
+                const code = content.match(/\d{6}/);
+
+                setTimeout(() => {
+                    if (code) {
+                        codeDisplay.innerText = code[0];
+                        codeDisplay.classList.remove('animate-pulse', 'text-blue-500');
+                        codeDisplay.classList.add('text-white');
+                        statusText.innerText = "查詢成功 | " + new Date().toLocaleTimeString();
+                    } else {
+                        codeDisplay.innerText = "EMPTY";
+                        statusText.innerText = "收件匣目前沒有新的驗證碼";
+                    }
+                }, 800);
+
+            } catch (err) {
+                codeDisplay.innerText = "ERROR";
+                statusText.innerText = "連線失敗，請檢查代理伺服器狀態";
             } finally {
                 btn.disabled = false;
-                btnText.innerText = '立即查詢驗證碼';
-                codeOutput.classList.remove('loading');
+                btnText.innerText = '立即執行查詢';
+                codeDisplay.classList.remove('animate-pulse');
             }
         }
     </script>
