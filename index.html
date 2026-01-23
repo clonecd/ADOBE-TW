@@ -1,128 +1,55 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adobe 驗證碼安全查詢系統</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@900&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background: #0c0c0e; color: #f4f4f5; }
-        .glass-card { background: rgba(24, 24, 27, 0.9); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); }
-        #canvas-source { position: absolute; left: -9999px; top: -9999px; background: #0c0c0e; padding: 20px; font-size: 60px; font-weight: 900; color: #3b82f6; font-style: italic; letter-spacing: -0.05em; }
-        .screenshot-display { cursor: pointer; transition: transform 0.2s; max-width: 100%; height: auto; margin: 0 auto; filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.3)); }
-        .screenshot-display:hover { transform: scale(1.05); }
-        .copy-toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #3b82f6; color: white; padding: 10px 20px; border-radius: 99px; font-size: 12px; font-weight: bold; opacity: 0; transition: opacity 0.3s; z-index: 100; }
-        @keyframes loading-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-        .loading { animation: loading-pulse 1.5s infinite; }
-    </style>
-</head>
-<body class="min-h-screen flex items-center justify-center p-6">
+<script>
+    // 優先使用您的 Google Script 網址
+    const PRIMARY_PROXY = 'https://script.google.com/macros/s/AKfycbyRbiVR0b0h328JkllhPCeWFZLlTj3WJTxl-QAut6VH9hzITIOUvHmIg5aKQvRNqqTBVQ/exec';
+    
+    // 備援通道 (公共代理)
+    const BACKUP_PROXY = 'https://api.allorigins.win/get?url=';
+    const TARGET_BASE = 'http://live.psai.xin/proxy.php?email=';
 
-    <div id="toast" class="copy-toast">✓ 驗證碼截圖內容已複製</div>
+    async function fetchAndCapture() {
+        const email = document.getElementById('emailInput').value.trim();
+        const btn = document.getElementById('queryBtn');
+        const status = document.getElementById('status');
+        const imageContainer = document.getElementById('image-container');
 
-    <div id="canvas-source">000000</div>
+        btn.disabled = true;
+        status.innerText = "嘗試連線主通道...";
 
-    <div class="w-full max-w-md glass-card rounded-[2.5rem] p-10 shadow-2xl text-center">
-        <header class="mb-10">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 mb-6">
-                <span class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
-                <span class="text-[10px] font-black text-blue-400 uppercase tracking-widest">Image Secure Mode</span>
-            </div>
-            <h1 class="text-3xl font-black text-white">Adobe 查詢框架</h1>
-            <p class="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.4em] mt-2">輸入帳號，驗證碼以加密截圖顯示</p>
-        </header>
-
-        <div class="space-y-6">
-            <div class="space-y-2">
-                <label for="emailInput" class="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">郵箱帳號</label>
-                <input type="email" id="emailInput" value="748kvi41b@psai.xin" 
-                    class="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl px-6 py-4 outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 transition-all text-lg font-bold text-white placeholder:text-zinc-700">
-            </div>
-            <button onclick="fetchAndCapture()" id="queryBtn"
-                class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl transition-all shadow-lg shadow-blue-900/30">
-                獲取驗證碼截圖
-            </button>
-        </div>
-
-        <div id="resultArea" class="mt-12 pt-8 border-t border-zinc-800 hidden">
-            <span class="text-[10px] font-black text-zinc-600 tracking-[0.3em] uppercase">最新截圖驗證碼</span>
+        try {
+            // --- 嘗試 1：Google Apps Script ---
+            let response = await fetch(`${PRIMARY_PROXY}?email=${encodeURIComponent(email)}`);
+            let text = await response.text();
             
-            <div id="image-container" class="mt-6 min-h-[80px] flex items-center justify-center" onclick="copyValue()">
-                <div id="wait-text" class="text-zinc-700 font-black text-4xl loading">GENERATING...</div>
-            </div>
+            // 如果 Google 回傳錯誤或空白，嘗試備援通道
+            if (!text || text.includes('error')) throw new Error('Primary failed');
             
-            <p id="status" class="mt-6 text-[10px] font-bold text-zinc-500 uppercase">準備通訊</p>
-        </div>
-    </div>
+            processCode(text);
 
-    <script>
-        const PROXY_URL = 'https://script.google.com/macros/s/AKfycbyRbiVR0b0h328JkllhPCeWFZLlTj3WJTxl-QAut6VH9hzITIOUvHmIg5aKQvRNqqTBVQ/exec';
-        let lastFetchedCode = ""; // 用於複製功能
-
-        async function fetchAndCapture() {
-            const email = document.getElementById('emailInput').value.trim();
-            const btn = document.getElementById('queryBtn');
-            const resultArea = document.getElementById('resultArea');
-            const imageContainer = document.getElementById('image-container');
-            const status = document.getElementById('status');
-            const source = document.getElementById('canvas-source');
-
-            if (!email) {
-                alert('請輸入郵箱帳號！');
-                return;
-            }
-
-            btn.disabled = true;
-            btn.innerText = '正在攔截數據...';
-            resultArea.classList.remove('hidden');
-            imageContainer.innerHTML = '<div class="text-zinc-700 font-black text-4xl loading">READING...</div>';
-            status.innerText = "穿透加密隧道中";
-            lastFetchedCode = ""; // 重置
-
+        } catch (err) {
+            status.innerText = "主通道失敗，啟動備援通道...";
             try {
-                const response = await fetch(`${PROXY_URL}?email=${encodeURIComponent(email)}`);
-                const text = await response.text();
-                const match = text.match(/\d{6}/);
-
-                if (match) {
-                    lastFetchedCode = match[0];
-                    source.innerText = lastFetchedCode; // 將文字填入隱藏的渲染區
-                    
-                    setTimeout(async () => {
-                        const canvas = await html2canvas(source, { backgroundColor: null }); // 背景透明
-                        const imgData = canvas.toDataURL("image/png");
-                        
-                        imageContainer.innerHTML = `<img src="${imgData}" class="screenshot-display" title="點擊複製數字">`;
-                        status.innerText = "截圖生成成功 | " + new Date().toLocaleTimeString('zh-TW');
-                    }, 300); // 短暫延遲確保渲染
-                } else {
-                    imageContainer.innerHTML = '<div class="text-zinc-800 font-black text-2xl uppercase">無資料</div>';
-                    status.innerText = "目前查無驗證碼";
-                }
-            } catch (err) {
-                console.error(err);
-                imageContainer.innerHTML = '<div class="text-red-900 font-black text-2xl uppercase">錯誤</div>';
-                status.innerText = "連線失敗";
-            } finally {
-                btn.disabled = false;
-                btn.innerText = '獲取驗證碼截圖';
+                // --- 嘗試 2：Allorigins 公共代理 ---
+                const targetUrl = TARGET_BASE + encodeURIComponent(email);
+                const res = await fetch(BACKUP_PROXY + encodeURIComponent(targetUrl));
+                const data = await res.json();
+                processCode(data.contents);
+            } catch (backupErr) {
+                imageContainer.innerHTML = '<div class="text-red-500 font-black text-2xl uppercase italic">連線全數失敗</div>';
+                status.innerText = "請確認原網站是否在線";
             }
+        } finally {
+            btn.disabled = false;
         }
+    }
 
-        function copyValue() {
-            if (lastFetchedCode && lastFetchedCode !== "ERROR" && lastFetchedCode !== "無資料") {
-                navigator.clipboard.writeText(lastFetchedCode).then(() => {
-                    const toast = document.getElementById('toast');
-                    toast.style.opacity = '1';
-                    setTimeout(() => { toast.style.opacity = '0'; }, 2000);
-                }).catch(err => {
-                    console.error('複製失敗:', err);
-                    alert('無法複製，請手動選取：' + lastFetchedCode);
-                });
-            }
+    function processCode(rawText) {
+        const match = rawText.match(/\d{6}/);
+        if (match) {
+            lastFetchedCode = match[0];
+            renderImage(lastFetchedCode);
+        } else {
+            document.getElementById('image-container').innerHTML = '無資料';
+            document.getElementById('status').innerText = "目前無驗證碼";
         }
-    </script>
-</body>
-</html>
+    }
+</script>
