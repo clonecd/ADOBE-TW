@@ -3,110 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adobe 驗證碼查詢系統</title>
+    <title>Adobe 驗證碼查詢</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f2f5; }
-        .glass-panel { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.3); }
-        .loading-ring { border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body { background: #f9fafb; font-family: -apple-system, "Microsoft JhengHei", sans-serif; }
+        .card { background: white; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .btn-primary { background: #0066ff; transition: all 0.2s; }
+        .btn-primary:hover { background: #0052cc; transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); }
+        .loading { animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-6">
+<body class="min-h-screen flex items-center justify-center p-4">
 
-    <div class="max-w-md w-full glass-panel rounded-[2rem] shadow-2xl p-8 transition-all hover:shadow-blue-100">
+    <div class="card w-full max-w-md p-8">
         <div class="text-center mb-8">
-            <div class="w-16 h-16 bg-gradient-to-tr from-red-600 to-red-400 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <span class="text-white text-3xl font-black italic">A</span>
+            <div class="w-16 h-16 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 24 24"><path d="M13.98 21.806h6.296L13.98 4.412zM10.201 21.806H3.72l6.481-17.394zM12.001 8.718l3.926 10.45H8.075z"/></svg>
             </div>
-            <h1 class="text-2xl font-black text-gray-800 tracking-tighter">驗證碼查詢系統</h1>
-            <p class="text-gray-400 text-sm mt-1">繁體精簡版 (v2.1)</p>
+            <h1 class="text-2xl font-bold text-gray-800">Adobe 帳號查詢</h1>
+            <p class="text-gray-400 text-sm mt-1 font-medium">專屬繁體精簡查詢界面</p>
         </div>
 
-        <div class="bg-blue-50 rounded-2xl p-4 mb-6 flex gap-3 items-start border border-blue-100">
-            <span class="text-blue-500 mt-0.5">ℹ</span>
-            <p class="text-xs text-blue-700 leading-relaxed">
-                <strong>系統提醒：</strong> 請勿重複嘗試錯誤代碼。如需最新驗證碼，請點擊查詢按鈕獲取系統當前記錄。
+        <div class="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-6">
+            <p class="text-xs text-amber-700 leading-relaxed font-bold">
+                ⚠️ 注意：驗證碼錯誤後請勿重試！請點擊下方按鈕重新獲取。
             </p>
         </div>
 
         <div class="space-y-4">
             <div>
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2">Email Address</label>
-                <input type="email" id="email" value="748kvi41b@psai.xin"
-                    class="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:border-blue-500 outline-none transition-all font-bold text-gray-700 shadow-sm"
-                    placeholder="請輸入郵箱帳號">
+                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Email Account</label>
+                <input type="email" id="emailInput" 
+                    value="748kvi41b@psai.xin" 
+                    class="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-gray-700 transition-all">
             </div>
 
-            <button onclick="fetchVerificationCode()" id="queryBtn"
-                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-lg shadow-blue-200 transition-all active:scale-95 flex justify-center items-center gap-3">
-                <span id="btnText">立即獲取驗證碼</span>
-                <div id="btnLoader" class="loading-ring hidden"></div>
+            <button onclick="fetchCode()" id="queryBtn" class="btn-primary w-full text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-100 flex items-center justify-center gap-2">
+                <span id="btnText">立即查詢驗證碼</span>
             </button>
         </div>
 
-        <div id="resultBox" class="mt-10 pt-8 border-t border-gray-100 hidden animate-fade-in text-center">
-            <span class="text-[10px] font-black text-gray-300 tracking-[0.3em] uppercase">Verification Code</span>
-            <div id="codeDisplay" class="text-5xl font-black text-blue-600 mt-3 tracking-tighter">------</div>
-            <p id="timeInfo" class="text-[10px] text-gray-400 mt-4 font-medium uppercase"></p>
+        <div id="resultBox" class="hidden mt-10 pt-8 border-t border-gray-50 text-center animate-fade-in">
+            <span class="text-[10px] font-bold text-gray-300 tracking-[0.3em] uppercase">Current Verification Code</span>
+            <div id="codeOutput" class="text-5xl font-mono font-black text-blue-600 mt-4 tracking-tighter">------</div>
+            <p id="statusMsg" class="text-[10px] text-gray-400 mt-4 font-bold uppercase"></p>
         </div>
 
-        <div class="mt-12 text-center">
-            <p class="text-[9px] text-gray-300 font-bold tracking-[0.2em] uppercase">Gateway: live.psai.xin via Proxy</p>
+        <div class="mt-12 text-center border-t pt-6 border-gray-50">
+            <p class="text-[9px] text-gray-300 font-bold tracking-widest uppercase italic">Target: live.psai.xin</p>
         </div>
     </div>
 
     <script>
-        async function fetchVerificationCode() {
-            const email = document.getElementById('email').value.trim();
+        async function fetchCode() {
+            const email = document.getElementById('emailInput').value.trim();
             const btn = document.getElementById('queryBtn');
             const btnText = document.getElementById('btnText');
-            const btnLoader = document.getElementById('btnLoader');
             const resultBox = document.getElementById('resultBox');
-            const codeDisplay = document.getElementById('codeDisplay');
-            const timeInfo = document.getElementById('timeInfo');
+            const codeOutput = document.getElementById('codeOutput');
+            const statusMsg = document.getElementById('statusMsg');
 
-            if (!email) return alert('請輸入郵箱地址');
+            if (!email) return alert('請輸入帳號');
 
-            // UI 鎖定狀態
+            // 1. UI 讀取狀態
             btn.disabled = true;
-            btnText.innerText = '正在繞過防護請求中';
-            btnLoader.classList.remove('hidden');
+            btnText.innerText = '查詢中...';
             resultBox.classList.remove('hidden');
-            codeDisplay.innerText = "讀取中";
-            codeDisplay.classList.add('animate-pulse', 'text-gray-300');
+            codeOutput.innerText = "......";
+            codeOutput.classList.add('loading');
+            statusMsg.innerText = "正在透過加密代理獲取資料";
 
-            // 雙代理邏輯 (解決 HTTPS/CORS 限制)
-            const target = `http://live.psai.xin/proxy.php?email=${encodeURIComponent(email)}`;
-            // 優先使用 allorigins 代理
-            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(target)}`;
+            // 2. 跨域代理設定 (解決 HTTPS 請求 HTTP 的問題)
+            const targetUrl = `http://live.psai.xin/proxy.php?email=${encodeURIComponent(email)}`;
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
 
             try {
                 const response = await fetch(proxyUrl);
                 const data = await response.json();
-                const content = data.contents; // 這是代理回傳的 HTML/純文字內容
-
-                // 使用正則表達式提取 6 位連續數字
-                const codeMatch = content.match(/\d{6}/);
-
-                if (codeMatch) {
-                    codeDisplay.innerText = codeMatch[0];
-                    codeDisplay.classList.remove('animate-pulse', 'text-gray-300');
-                    codeDisplay.classList.add('text-blue-600');
-                    timeInfo.innerText = "更新於: " + new Date().toLocaleTimeString();
+                
+                // 3. 解析回傳內容 (Allorigins 會把 HTML 放在 .contents 中)
+                const content = data.contents;
+                
+                // 使用正則抓取 6 位數字
+                const match = content.match(/\d{6}/);
+                
+                if (match) {
+                    codeOutput.innerText = match[0];
+                    statusMsg.innerText = "查詢成功";
+                    statusMsg.classList.add('text-green-500');
                 } else {
-                    codeDisplay.innerText = "無資料";
-                    timeInfo.innerText = "目前郵箱內暫無驗證碼";
+                    codeOutput.innerText = "NONE";
+                    statusMsg.innerText = "目前收件匣無驗證碼";
                 }
             } catch (error) {
                 console.error('Fetch error:', error);
-                codeDisplay.innerText = "失敗";
-                timeInfo.innerText = "無法連線至 API，請檢查網路或代理狀態";
+                codeOutput.innerText = "FAIL";
+                statusMsg.innerText = "代理服務連線失敗";
             } finally {
                 btn.disabled = false;
-                btnText.innerText = '立即獲取驗證碼';
-                btnLoader.classList.add('hidden');
+                btnText.innerText = '立即查詢驗證碼';
+                codeOutput.classList.remove('loading');
             }
         }
     </script>
